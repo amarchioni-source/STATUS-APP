@@ -103,6 +103,17 @@
     .nota { color: var(--suave); font-size: 13px; margin: 10px 0 0; }
 
     /* ---------- Resultado ---------- */
+    .generado {
+      display: flex; align-items: center; gap: 12px; margin-top: 22px;
+      padding: 12px 16px; border-radius: 8px;
+      background: #e6f4ea; border: 1px solid #a6d4b2; color: #14532d; font-weight: 700;
+    }
+    .generado .tilde {
+      display: inline-grid; place-items: center; flex: none;
+      width: 30px; height: 30px; border-radius: 50%;
+      background: var(--ok); color: #fff; font-size: 18px; line-height: 1;
+    }
+    .generado span:last-child { font-weight: 400; color: #2f6b45; }
     .resultado h2 { font-size: 20px; margin: 30px 0 14px; letter-spacing: -0.01em; }
 
     .banner {
@@ -228,6 +239,11 @@
 
     {% if r %}
     <section class="resultado">
+      <div class="generado sin-imprimir" role="status">
+        <span class="tilde" aria-hidden="true">✓</span>
+        <strong>Status generado</strong>
+        <span>SO {{ r.so }} procesado correctamente</span>
+      </div>
       <h2>{{ 'FINAL' if final else 'STATUS!' }} – SO {{ r.so }}{% if r.consignee %} ({{ r.consignee }}){% endif %}</h2>
 
       {% if r.hay_retenido %}
