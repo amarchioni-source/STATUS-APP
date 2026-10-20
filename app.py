@@ -2,6 +2,7 @@ import os
 import secrets
 
 from flask import Flask, Response, render_template, request
+from werkzeug.exceptions import HTTPException
 
 from status_core import StatusError, generar_status
 
@@ -67,6 +68,27 @@ def status():
         return volver("No se pudo procesar alguno de los archivos. Revise que sean los reportes originales sin modificar.", 500)
 
     return render_template("index.html", r=resultado, so=so, final=final)
+
+
+@app.errorhandler(413)
+def archivo_muy_grande(_exc):
+    return render_template("index.html", error="Los archivos superan el tamaño máximo permitido (80 MB en total)."), 413
+
+
+@app.errorhandler(Exception)
+def error_inesperado(exc):
+    if isinstance(exc, HTTPException):
+        return exc
+    app.logger.exception("Error no controlado")
+    return (
+        render_template(
+            "index.html",
+            error=f"Error inesperado ({type(exc).__name__}): {exc}",
+            so=request.form.get("so", ""),
+            final=bool(request.form.get("final")),
+        ),
+        500,
+    )
 
 
 if __name__ == "__main__":
