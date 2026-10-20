@@ -3,229 +3,318 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% if r %}{{ 'FINAL' if final else 'STATUS!' }} – SO {{ r.so }}{% else %}Status por SO{% endif %}</title>
+  <title>Status APP{% if r %} – SO {{ r.so }}{% endif %}</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A5%A9%3C/text%3E%3C/svg%3E">
   <style>
-:root {
-  --tinta: #1c2630;
-  --tinta-suave: #5a6772;
-  --linea: #cfd5da;
-  --fondo: #ffffff;
-  --superficie: #f4f6f8;
-  --ok-fondo: #c6efce;
-  --pend-fondo: #ffc7ce;
-  --exc-fondo: #ffeb9c;
-  --alerta: #c00000;
-  --ok: #1e7b3a;
-  --acento: #1f4e79;
-}
+    :root {
+      --tinta: #12202e;
+      --acero: #3c566e;
+      --suave: #5b6b79;
+      --linea: #d3dae0;
+      --fondo: #ffffff;
+      --panel: #f3f5f7;
+      --ok-fondo: #c6efce;
+      --pend-fondo: #ffc7ce;
+      --exc-fondo: #ffeb9c;
+      --alerta: #b3121f;
+      --ok: #1e7b3a;
+      --boton: #1b3a57;
+    }
 
-* { box-sizing: border-box; }
+    * { box-sizing: border-box; }
 
-body {
-  margin: 0;
-  background: var(--fondo);
-  color: var(--tinta);
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 15px;
-  line-height: 1.45;
-}
+    body {
+      margin: 0;
+      background: var(--fondo);
+      color: var(--tinta);
+      font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.5;
+    }
 
-main {
-  max-width: 980px;
-  margin: 0 auto;
-  padding: 24px 16px 48px;
-}
+    /* ---------- Cabecera ---------- */
+    .cabecera { background: var(--tinta); color: #fff; }
+    .cabecera .interior { max-width: 980px; margin: 0 auto; padding: 26px 16px 22px; }
+    .cabecera h1 { margin: 0; font-size: 36px; line-height: 1.05; font-weight: 800; letter-spacing: -0.02em; }
+    .cabecera p { margin: 6px 0 0; color: #aebccb; font-size: 15px; }
 
-h1 { font-size: 20px; margin: 0 0 16px; }
-h2 { font-size: 18px; margin: 28px 0 12px; }
+    main { max-width: 980px; margin: 0 auto; padding: 22px 16px 56px; }
 
-.carga {
-  background: var(--superficie);
-  border: 1px solid var(--linea);
-  border-radius: 6px;
-  padding: 18px;
-}
+    /* ---------- Formulario ---------- */
+    .carga {
+      background: var(--panel);
+      border: 1px solid var(--linea);
+      border-radius: 8px;
+      padding: 20px;
+    }
+    .campos { display: grid; grid-template-columns: 1fr 1fr 170px; gap: 18px; }
+    .campo { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+    .rotulo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; }
+    .paso {
+      display: inline-grid; place-items: center;
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--tinta); color: #fff; font-size: 12px; flex: none;
+    }
+    input[type="text"] {
+      font: inherit; padding: 9px 10px; border: 1px solid #aeb8c1; border-radius: 5px; background: #fff; width: 100%;
+    }
+    input[type="file"] {
+      font: inherit; font-size: 13px; width: 100%;
+      padding: 8px; border: 1px dashed #8d9aa6; border-radius: 5px; background: #fff;
+    }
+    input[type="file"]::file-selector-button {
+      font: inherit; font-weight: 700; margin-right: 10px; padding: 6px 12px;
+      border: 0; border-radius: 4px; background: var(--acero); color: #fff; cursor: pointer;
+    }
+    .acciones { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 18px; flex-wrap: wrap; }
+    .check { font-size: 14px; display: flex; align-items: center; gap: 8px; }
+    .aviso-espera { margin: 12px 0 0; color: var(--suave); font-size: 13px; }
 
-.campos {
-  display: grid;
-  grid-template-columns: 1fr 1fr 160px;
-  gap: 14px;
-}
+    button {
+      font: inherit; font-weight: 700;
+      background: var(--boton); color: #fff;
+      border: 0; border-radius: 5px; padding: 11px 22px; cursor: pointer;
+    }
+    button:hover { background: #122a40; }
+    button:disabled { background: #6f8296; cursor: wait; }
+    button.secundario { background: #fff; color: var(--boton); border: 1px solid var(--boton); }
+    button.secundario:hover { background: var(--panel); }
+    button:focus-visible, input:focus-visible, summary:focus-visible { outline: 3px solid #7aa7d0; outline-offset: 2px; }
 
-.campos label { display: flex; flex-direction: column; gap: 6px; font-weight: bold; font-size: 13px; }
-.campos input[type="text"] { font: inherit; padding: 8px; border: 1px solid var(--linea); border-radius: 4px; }
-.campos input[type="file"] { font: inherit; font-weight: normal; }
+    .error {
+      margin: 16px 0 0; padding: 12px 14px;
+      border-left: 5px solid var(--alerta); background: #fdecea; font-weight: 600;
+    }
 
-.acciones { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
-.check { font-size: 14px; }
+    /* ---------- Instrucciones ---------- */
+    .guia { margin-top: 16px; border: 1px solid var(--linea); border-radius: 8px; }
+    .guia summary { cursor: pointer; padding: 12px 16px; font-weight: 700; }
+    .guia .contenido { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; padding: 4px 18px 18px; }
+    .guia h3 { margin: 0 0 8px; font-size: 14px; }
+    .guia ol { margin: 0; padding-left: 20px; }
+    .guia li { margin-bottom: 6px; }
+    .leyenda { list-style: none; padding: 0; margin: 0; }
+    .leyenda li { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 8px; }
+    .muestra { flex: none; width: 18px; height: 18px; margin-top: 3px; border-radius: 3px; border: 1px solid rgba(0,0,0,.2); }
+    .muestra.ok { background: var(--ok-fondo); }
+    .muestra.pend { background: var(--pend-fondo); }
+    .muestra.exc { background: var(--exc-fondo); }
+    .leyenda .emoji { flex: none; width: 18px; text-align: center; }
+    .nota { color: var(--suave); font-size: 13px; margin: 10px 0 0; }
 
-button {
-  font: inherit;
-  font-weight: bold;
-  background: var(--acento);
-  color: #fff;
-  border: 0;
-  border-radius: 4px;
-  padding: 10px 18px;
-  cursor: pointer;
-}
-button:hover { background: #173b5a; }
-button:focus-visible, input:focus-visible { outline: 3px solid #7aa7d0; outline-offset: 2px; }
-button.secundario { background: #fff; color: var(--acento); border: 1px solid var(--acento); }
-button.secundario:hover { background: var(--superficie); }
+    /* ---------- Resultado ---------- */
+    .resultado h2 { font-size: 20px; margin: 30px 0 14px; letter-spacing: -0.01em; }
 
-.error {
-  margin: 16px 0 0;
-  padding: 12px 14px;
-  border-left: 4px solid var(--alerta);
-  background: #fdecea;
-}
+    .banner {
+      display: flex; align-items: center; gap: 16px;
+      padding: 16px 20px; border-radius: 8px; color: #fff; margin-bottom: 16px;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .banner .icono { font-size: 40px; line-height: 1; }
+    .banner strong { display: block; font-size: 24px; line-height: 1.15; }
+    .banner span:not(.icono) { font-size: 15px; opacity: .95; }
+    .banner.alerta { background: var(--alerta); box-shadow: 0 0 0 4px #f6c9cd; }
+    .banner.ok { background: var(--ok); }
 
-/* Alerta de retenido / tilde de todo OK */
-.banner {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 14px 18px;
-  border-radius: 6px;
-  color: #fff;
-  margin-bottom: 14px;
-  -webkit-print-color-adjust: exact;
-  print-color-adjust: exact;
-}
-.banner .icono { font-size: 34px; line-height: 1; }
-.banner strong { display: block; font-size: 22px; }
-.banner span:not(.icono) { font-size: 14px; }
-.banner.alerta { background: var(--alerta); }
-.banner.ok { background: var(--ok); }
+    @media (prefers-reduced-motion: no-preference) {
+      .banner.alerta .icono { display: inline-block; animation: sacudir .7s ease-in-out 2; }
+    }
+    @keyframes sacudir {
+      0%, 100% { transform: rotate(0); }
+      20% { transform: rotate(-14deg); }
+      40% { transform: rotate(12deg); }
+      60% { transform: rotate(-8deg); }
+      80% { transform: rotate(6deg); }
+    }
 
-.tabla-wrap { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-th, td { border: 1px solid var(--linea); padding: 6px 10px; text-align: left; white-space: nowrap; }
-th { background: #d9e1f2; }
-.n { text-align: right; font-variant-numeric: tabular-nums; }
-th.n { text-align: right; }
-tr.ok td { background: var(--ok-fondo); }
-tr.pend td { background: var(--pend-fondo); }
-tr.exc td { background: var(--exc-fondo); }
-tfoot td { font-weight: bold; background: var(--superficie); }
-table, tr, td, th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .tabla-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { border: 1px solid var(--linea); padding: 7px 10px; text-align: left; white-space: nowrap; }
+    th { background: #d9e1f2; }
+    .n { text-align: right; font-variant-numeric: tabular-nums; }
+    th.n { text-align: right; }
+    td.ret { color: var(--alerta); font-weight: 700; }
+    tr.ok td { background: var(--ok-fondo); }
+    tr.pend td { background: var(--pend-fondo); }
+    tr.exc td { background: var(--exc-fondo); }
+    tfoot td { font-weight: 700; background: var(--panel); }
+    table, tr, td, th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
-.resumen { margin: 12px 0 0; font-weight: bold; }
-.avisos { margin: 12px 0 0; padding-left: 20px; color: var(--tinta-suave); font-size: 13px; }
-.acciones-resultado { display: flex; gap: 10px; margin-top: 18px; }
+    .resumen { margin: 14px 0 0; font-weight: 700; }
+    .avisos { margin: 12px 0 0; padding-left: 20px; color: var(--suave); font-size: 13px; }
+    .acciones-resultado { display: flex; gap: 10px; margin-top: 20px; }
 
-@media (max-width: 680px) {
-  .campos { grid-template-columns: 1fr; }
-}
+    @media (max-width: 760px) {
+      .campos, .guia .contenido { grid-template-columns: 1fr; }
+      .cabecera h1 { font-size: 30px; }
+    }
 
-@media print {
-  .sin-imprimir { display: none !important; }
-  main { padding: 0; max-width: none; }
-  body { font-size: 11px; }
-  h2 { margin-top: 0; font-size: 15px; }
-  .banner { padding: 8px 12px; }
-  .banner strong { font-size: 16px; }
-  .banner .icono { font-size: 24px; }
-  th, td { padding: 3px 6px; }
-  @page { size: A4 landscape; margin: 10mm; }
-}
+    @media print {
+      .sin-imprimir { display: none !important; }
+      main { padding: 0; max-width: none; }
+      body { font-size: 11px; }
+      .resultado h2 { margin-top: 0; font-size: 15px; }
+      .banner { padding: 8px 12px; box-shadow: none; }
+      .banner strong { font-size: 16px; }
+      .banner .icono { font-size: 24px; }
+      th, td { padding: 3px 6px; }
+      @page { size: A4 landscape; margin: 10mm; }
+    }
   </style>
 </head>
 <body>
-<main>
 
-  <form class="carga sin-imprimir" method="post" action="{{ url_for('status') }}" enctype="multipart/form-data">
-    <h1>Status de producción por venta</h1>
-    <div class="campos">
-      <label>Excel de stock
-        <input type="file" name="stock" accept=".xlsx,.xlsm" required>
-      </label>
-      <label>Excel de ventas
-        <input type="file" name="ventas" accept=".xlsx,.xlsm" required>
-      </label>
-      <label class="campo-so">Nro. de SO
-        <input type="text" name="so" value="{{ so or '' }}" inputmode="numeric" placeholder="10121" required>
-      </label>
+  <header class="cabecera sin-imprimir">
+    <div class="interior">
+      <h1>Status APP</h1>
+      <p>Producción vs. venta por SO, con alerta de mercadería retenida</p>
     </div>
-    <div class="acciones">
-      <label class="check"><input type="checkbox" name="final" value="1" {{ 'checked' if final }}> Pedido cerrado (título FINAL)</label>
-      <button type="submit">Generar status</button>
-    </div>
-  </form>
+  </header>
 
-  {% if error %}
-  <p class="error sin-imprimir" role="alert">{{ error }}</p>
-  {% endif %}
+  <main>
 
-  {% if r %}
-  <section class="resultado">
-    <h2>{{ 'FINAL' if final else 'STATUS!' }} – SO {{ r.so }}{% if r.consignee %} ({{ r.consignee }}){% endif %}</h2>
-
-    {% if r.hay_retenido %}
-    <div class="banner alerta" role="alert">
-      <span class="icono" aria-hidden="true">🚨</span>
-      <div>
-        <strong>¡Venta con producto retenido!</strong>
-        <span>{{ r.retenido_txt }}</span>
+    <form class="carga sin-imprimir" id="form-carga" method="post" action="{{ url_for('status') }}" enctype="multipart/form-data">
+      <div class="campos">
+        <label class="campo">
+          <span class="rotulo"><span class="paso">1</span> Excel de stock</span>
+          <input type="file" name="stock" accept=".xlsx,.xlsm" required>
+        </label>
+        <label class="campo">
+          <span class="rotulo"><span class="paso">2</span> Excel de ventas</span>
+          <input type="file" name="ventas" accept=".xlsx,.xlsm" required>
+        </label>
+        <label class="campo">
+          <span class="rotulo"><span class="paso">3</span> Nro. de SO</span>
+          <input type="text" name="so" value="{{ so or '' }}" inputmode="numeric" placeholder="10121" required>
+        </label>
       </div>
-    </div>
-    {% elif r.ok %}
-    <div class="banner ok" role="status">
-      <span class="icono" aria-hidden="true">✅</span>
-      <strong>Todo OK</strong>
-    </div>
+      <div class="acciones">
+        <label class="check"><input type="checkbox" name="final" value="1" {{ 'checked' if final }}> Pedido cerrado (título FINAL)</label>
+        <button type="submit" id="boton-generar">Generar status</button>
+      </div>
+      <p class="aviso-espera" id="aviso-espera" hidden>Procesando… el stock es un archivo grande y puede demorar hasta un minuto. No cierre esta ventana.</p>
+    </form>
+
+    {% if error %}
+    <p class="error sin-imprimir" role="alert">{{ error }}</p>
     {% endif %}
 
-    <div class="tabla-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Code</th><th>Product</th><th class="n">SC</th><th class="n">Produced</th>
-            {% if r.con_retenido %}<th class="n">Retained</th>{% endif %}
-            <th class="n">Difference</th><th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for l in r.lineas %}
-          <tr class="{{ l.estado }}">
-            <td>{{ l.codigo }}</td>
-            <td>{{ l.producto }}</td>
-            <td class="n">{{ l.sc_txt }}</td>
-            <td class="n">{{ l.prod_txt }}</td>
-            {% if r.con_retenido %}<td class="n">{{ l.ret_txt if l.retenido > 0.005 else '–' }}</td>{% endif %}
-            <td class="n">{{ l.diff_txt }}</td>
-            <td>{{ l.status }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-        <tfoot>
-          <tr>
-            <td colspan="2">Total</td>
-            <td class="n">{{ r.tot.sc_txt }}</td>
-            <td class="n">{{ r.tot.prod_txt }}</td>
-            {% if r.con_retenido %}<td class="n">{{ r.tot.ret_txt }}</td>{% endif %}
-            <td class="n">{{ r.tot.diff_txt }}</td>
-            <td></td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
+    <details class="guia sin-imprimir" {{ '' if r else 'open' }}>
+      <summary>Instrucciones</summary>
+      <div class="contenido">
+        <div>
+          <h3>Cómo usarla</h3>
+          <ol>
+            <li>Descargue el reporte de stock (<em>PD_INFORME STOCK POR VENTAS</em>) y el reporte de ventas (<em>Reporte de ventas</em>, de ImpexDocs), sin modificarlos.</li>
+            <li>Suba los dos archivos y escriba el número de SO, por ejemplo 10121.</li>
+            <li>Toque <strong>Generar status</strong>. Con el stock completo puede tardar hasta un minuto.</li>
+            <li>Para imprimir use el botón <strong>Imprimir</strong> que aparece debajo del resultado.</li>
+          </ol>
+          <p class="nota">Los archivos se procesan en el momento y no se guardan.</p>
+        </div>
+        <div>
+          <h3>Cómo leer el resultado</h3>
+          <ul class="leyenda">
+            <li><span class="emoji">🚨</span><span><strong>¡Venta con producto retenido!</strong> Hay kg del SO con estado distinto de APTO. La columna Retained indica cuántos.</span></li>
+            <li><span class="emoji">✅</span><span><strong>Todo OK:</strong> sin pendientes, excesos ni producto retenido.</span></li>
+            <li><span class="muestra ok"></span><span>🟢 Dentro del ±10% del SC: liquidado.</span></li>
+            <li><span class="muestra pend"></span><span>🔴🚨 En producción: falta más del 10% del SC.</span></li>
+            <li><span class="muestra exc"></span><span>🟠🚨 Excede about: se produjo más del 10% sobre el SC.</span></li>
+          </ul>
+          <p class="nota">Difference = Produced − SC. Negativo: falta producir. Positivo: excede.</p>
+        </div>
+      </div>
+    </details>
 
-    {% if r.resumen_pend %}<p class="resumen">{{ r.resumen_pend }}</p>{% endif %}
+    {% if r %}
+    <section class="resultado">
+      <h2>{{ 'FINAL' if final else 'STATUS!' }} – SO {{ r.so }}{% if r.consignee %} ({{ r.consignee }}){% endif %}</h2>
 
-    {% if r.avisos %}
-    <ul class="avisos sin-imprimir">
-      {% for a in r.avisos %}<li>{{ a }}</li>{% endfor %}
-    </ul>
+      {% if r.hay_retenido %}
+      <div class="banner alerta" role="alert">
+        <span class="icono" aria-hidden="true">🚨</span>
+        <div>
+          <strong>¡Venta con producto retenido!</strong>
+          <span>{{ r.retenido_txt }}</span>
+        </div>
+      </div>
+      {% elif r.ok %}
+      <div class="banner ok" role="status">
+        <span class="icono" aria-hidden="true">✅</span>
+        <div>
+          <strong>Todo OK</strong>
+          <span>Sin pendientes, excesos ni producto retenido</span>
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="tabla-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Code</th><th>Product</th><th class="n">SC</th><th class="n">Produced</th>
+              {% if r.con_retenido %}<th class="n">Retained</th>{% endif %}
+              <th class="n">Difference</th><th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for l in r.lineas %}
+            <tr class="{{ l.estado }}">
+              <td>{{ l.codigo }}</td>
+              <td>{{ l.producto }}</td>
+              <td class="n">{{ l.sc_txt }}</td>
+              <td class="n">{{ l.prod_txt }}</td>
+              {% if r.con_retenido %}<td class="n{{ ' ret' if l.retenido > 0.005 }}">{{ l.ret_txt if l.retenido > 0.005 else '–' }}</td>{% endif %}
+              <td class="n">{{ l.diff_txt }}</td>
+              <td>{{ l.status }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="2">Total</td>
+              <td class="n">{{ r.tot.sc_txt }}</td>
+              <td class="n">{{ r.tot.prod_txt }}</td>
+              {% if r.con_retenido %}<td class="n">{{ r.tot.ret_txt }}</td>{% endif %}
+              <td class="n">{{ r.tot.diff_txt }}</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      {% if r.resumen_pend %}<p class="resumen">{{ r.resumen_pend }}</p>{% endif %}
+
+      {% if r.avisos %}
+      <ul class="avisos sin-imprimir">
+        {% for a in r.avisos %}<li>{{ a }}</li>{% endfor %}
+      </ul>
+      {% endif %}
+
+      <div class="acciones-resultado sin-imprimir">
+        <button type="button" onclick="window.print()">Imprimir</button>
+      </div>
+    </section>
     {% endif %}
 
-    <div class="acciones-resultado sin-imprimir">
-      <button type="button" class="secundario" onclick="window.print()">Imprimir</button>
-    </div>
-  </section>
-  {% endif %}
+  </main>
 
-</main>
+  <script>
+    (function () {
+      var form = document.getElementById('form-carga');
+      var boton = document.getElementById('boton-generar');
+      var aviso = document.getElementById('aviso-espera');
+      form.addEventListener('submit', function () {
+        boton.disabled = true;
+        boton.textContent = 'Procesando…';
+        aviso.hidden = false;
+      });
+      window.addEventListener('pageshow', function () {
+        boton.disabled = false;
+        boton.textContent = 'Generar status';
+        aviso.hidden = true;
+      });
+    })();
+  </script>
 </body>
 </html>
