@@ -84,43 +84,53 @@ def texto_estado(estado, pct):
 
 
 # ---------------------------------------------------------------- lectura de Excel
-def _leer_tabla(data, mapa, requeridas, opcionales, etiqueta, so):
-    """Recorre el Excel en streaming (rápido y liviano), detecta la fila de
-    encabezados y conserva solo las filas del SO pedido y las columnas configuradas."""
-    from openpyxl import load_workbook
-
-    esperadas = [mapa[k] for k in requeridas]
-    anclas = {n.strip().lower() for n in esperadas}
-    deseadas = {mapa[k].strip().lower(): k for k in requeridas + opcionales if k in mapa}
+def _abrir_hojas(data, etiqueta):
+    """Devuelve una función por hoja que entrega sus filas. Usa python-calamine
+    (muy rápido) y, si no está instalado, openpyxl."""
+    try:
+        from python_calamine import CalamineWorkbook
+    except ImportError:
+        CalamineWorkbook = None
 
     try:
+        if CalamineWorkbook is not None:
+            wb = CalamineWorkbook.from_filelike(io.BytesIO(data))
+            return [(lambda n=n: wb.get_sheet_by_name(n).iter_rows()) for n in wb.sheet_names]
+        from openpyxl import load_workbook
+
         wb = load_workbook(io.BytesIO(data), read_only=True, data_only=True)
+        return [(lambda ws=ws: ws.iter_rows(values_only=True)) for ws in wb.worksheets]
     except Exception as exc:
         raise StatusError(
             f"No se pudo abrir el Excel de {etiqueta}. Verifique que sea un archivo .xlsx válido."
         ) from exc
 
+
+def _leer_tabla(data, mapa, requeridas, opcionales, etiqueta, so):
+    """Recorre el Excel una sola vez, detecta la fila de encabezados (puede haber
+    títulos arriba) y conserva solo las filas del SO pedido y las columnas configuradas."""
+    esperadas = [mapa[k] for k in requeridas]
+    anclas = {n.strip().lower() for n in esperadas}
+    deseadas = {mapa[k].strip().lower(): k for k in requeridas + opcionales if k in mapa}
+
     filas_so = []
     posiciones = None
-    try:
-        for ws in wb.worksheets:
-            # 1) ubicar encabezados en las primeras filas
-            for n_fila, fila in enumerate(ws.iter_rows(max_row=40, values_only=True), start=1):
-                celdas = {str(v).strip().lower(): i for i, v in enumerate(fila) if v is not None}
-                if anclas <= set(celdas):
-                    posiciones = {deseadas[n]: i for n, i in celdas.items() if n in deseadas}
-                    break
-            if posiciones is None:
-                continue
-            # 2) leer solo hasta la última columna necesaria
-            idx_so = posiciones["so"]
-            ultima = max(posiciones.values()) + 1
-            for fila in ws.iter_rows(min_row=n_fila + 1, max_col=ultima, values_only=True):
-                if idx_so < len(fila) and norm_so(fila[idx_so]) == so:
-                    filas_so.append({k: (fila[i] if i < len(fila) else None) for k, i in posiciones.items()})
-            break
-    finally:
-        wb.close()
+    for abrir in _abrir_hojas(data, etiqueta):
+        it = iter(abrir())
+        for n_fila, fila in enumerate(it):
+            if n_fila >= 40:
+                break
+            celdas = {str(v).strip().lower(): i for i, v in enumerate(fila) if v not in (None, "")}
+            if anclas <= set(celdas):
+                posiciones = {deseadas[n]: i for n, i in celdas.items() if n in deseadas}
+                break
+        if posiciones is None:
+            continue
+        idx_so = posiciones["so"]
+        for fila in it:
+            if idx_so < len(fila) and norm_so(fila[idx_so]) == so:
+                filas_so.append({k: (fila[i] if i < len(fila) else None) for k, i in posiciones.items()})
+        break
 
     if posiciones is None:
         raise StatusError(
