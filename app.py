@@ -5,7 +5,7 @@ from flask import Flask, Response, render_template, request
 
 from status_core import StatusError, generar_status
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder=".", static_folder=None)
 app.config["MAX_CONTENT_LENGTH"] = 80 * 1024 * 1024  # 80 MB entre ambos archivos
 
 APP_USER = os.environ.get("APP_USER", "")

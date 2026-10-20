@@ -11,7 +11,8 @@ from pathlib import Path
 
 import pandas as pd
 
-CONFIG_DIR = Path(__file__).parent / "config"
+_RAIZ = Path(__file__).parent
+CONFIG_DIR = _RAIZ if (_RAIZ / "columnas.json").exists() else _RAIZ / "config"
 
 
 class StatusError(Exception):
