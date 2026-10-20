@@ -18,7 +18,7 @@ def requerir_acceso():
     if request.path == "/salud":
         return None
     if not APP_USER or not APP_PASSWORD:
-        return Response("Falta configurar APP_USER y APP_PASSWORD en las variables de entorno.", 503)
+        return None  # sin usuario/contraseña configurados, la app abre sin login
     auth = request.authorization
     valido = (
         auth is not None
