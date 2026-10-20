@@ -17,13 +17,12 @@ CONFIG_DIR = _RAIZ if (_RAIZ / "columnas.json").exists() else _RAIZ / "config"
 # Columnas del Excel de shipment (se pueden redefinir en columnas.json, clave "shipment").
 # Cada dato acepta varios nombres posibles de encabezado.
 SHIPMENT_POR_DEFECTO = {
-    "so": ["Nro. Confir.", "Order Number"],
-    "pedidos": ["P. Twins"],
-    "codigo": ["Cod.", "Code"],
+    "so": ["Shipment No", "Nro. Confir.", "Order Number"],
+    "codigo": ["Code", "Cod."],
     "nivel3": ["Cod Nvl 3.", "Cod Nvl 3"],
-    "descripcion": ["Desc.", "Description"],
-    "kg": ["Cant.", "Quantity"],
-    "consignee": ["Desc. Cli.", "Consignee"],
+    "descripcion": ["Description", "Desc."],
+    "kg": ["Quantity", "Cant."],
+    "consignee": ["Consignee Name", "Desc. Cli.", "Consignee"],
 }
 
 
@@ -232,11 +231,6 @@ def _lineas_de_shipment(sh):
         no_nulos = s["consignee"].dropna()
         consignee = str(no_nulos.iloc[0]).strip() if not no_nulos.empty else ""
     pedidos = []
-    if "pedidos" in s.columns:
-        for celda in s["pedidos"].dropna().tolist():
-            for p in lista_pedidos(celda):
-                if p not in pedidos:
-                    pedidos.append(p)
     return lineas, equiv, consignee, pedidos
 
 
@@ -265,18 +259,18 @@ def generar_status(ventas_bytes, stock_bytes, so, shipment_bytes=None, pedidos_t
 
     if es_shipment:
         sh = _leer_tabla(
-            shipment_bytes, cols["shipment"], ["codigo", "kg"],
-            ["so", "pedidos", "descripcion", "nivel3", "consignee"], "shipment", "so", {so},
+            shipment_bytes, cols["shipment"], ["so", "codigo", "kg"],
+            ["descripcion", "nivel3", "consignee"], "shipment", "so", {so},
         )
         if sh.empty:
             if sh.attrs.get("filtro_aplicado"):
                 raise StatusError(f"No se encontró el shipment {so} en el Excel de shipment.")
             raise StatusError("El Excel de shipment no tiene líneas.")
-        lineas_venta, equiv_auto, consignee, pedidos_auto = _lineas_de_shipment(sh)
-        pedidos = lista_pedidos(pedidos_txt) or pedidos_auto
+        lineas_venta, equiv_auto, consignee, _ = _lineas_de_shipment(sh)
+        pedidos = lista_pedidos(pedidos_txt)
         if not pedidos:
             raise StatusError(
-                "Ingrese los pedidos del shipment (por ejemplo 218136, 218137) para buscarlos en el stock."
+                "Ingrese los pedidos del stock que conforman el shipment (por ejemplo 218136, 218137), separados por coma."
             )
         stock = _leer_tabla(
             stock_bytes, cols["stock"], ["pedido", "codigo", "kg"], ["descripcion", "retenido"],
