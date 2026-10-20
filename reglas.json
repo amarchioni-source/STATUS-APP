@@ -1,0 +1,11 @@
+{
+  "tolerancia": 0.10,
+  "estados_aptos": ["APTO"],
+  "prefijos_descripcion": [
+    "CHILLED BONELESS BEEF",
+    "ANGUS BONELESS BEEF",
+    "FROZEN BONELESS BEEF",
+    "CHILLED BEEF",
+    "FROZEN BEEF"
+  ]
+}

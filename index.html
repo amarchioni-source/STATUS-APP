@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% if r %}{{ 'FINAL' if final else 'STATUS!' }} – SO {{ r.so }}{% else %}Status por SO{% endif %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<main>
+
+  <form class="carga sin-imprimir" method="post" action="{{ url_for('status') }}" enctype="multipart/form-data">
+    <h1>Status de producción por venta</h1>
+    <div class="campos">
+      <label>Excel de stock
+        <input type="file" name="stock" accept=".xlsx,.xlsm" required>
+      </label>
+      <label>Excel de ventas
+        <input type="file" name="ventas" accept=".xlsx,.xlsm" required>
+      </label>
+      <label class="campo-so">Nro. de SO
+        <input type="text" name="so" value="{{ so or '' }}" inputmode="numeric" placeholder="10121" required>
+      </label>
+    </div>
+    <div class="acciones">
+      <label class="check"><input type="checkbox" name="final" value="1" {{ 'checked' if final }}> Pedido cerrado (título FINAL)</label>
+      <button type="submit">Generar status</button>
+    </div>
+  </form>
+
+  {% if error %}
+  <p class="error sin-imprimir" role="alert">{{ error }}</p>
+  {% endif %}
+
+  {% if r %}
+  <section class="resultado">
+    <h2>{{ 'FINAL' if final else 'STATUS!' }} – SO {{ r.so }}{% if r.consignee %} ({{ r.consignee }}){% endif %}</h2>
+
+    {% if r.hay_retenido %}
+    <div class="banner alerta" role="alert">
+      <span class="icono" aria-hidden="true">🚨</span>
+      <div>
+        <strong>¡Venta con producto retenido!</strong>
+        <span>{{ r.retenido_txt }}</span>
+      </div>
+    </div>
+    {% elif r.ok %}
+    <div class="banner ok" role="status">
+      <span class="icono" aria-hidden="true">✅</span>
+      <strong>Todo OK</strong>
+    </div>
+    {% endif %}
+
+    <div class="tabla-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Code</th><th>Product</th><th class="n">SC</th><th class="n">Produced</th>
+            {% if r.con_retenido %}<th class="n">Retained</th>{% endif %}
+            <th class="n">Difference</th><th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for l in r.lineas %}
+          <tr class="{{ l.estado }}">
+            <td>{{ l.codigo }}</td>
+            <td>{{ l.producto }}</td>
+            <td class="n">{{ l.sc_txt }}</td>
+            <td class="n">{{ l.prod_txt }}</td>
+            {% if r.con_retenido %}<td class="n">{{ l.ret_txt if l.retenido > 0.005 else '–' }}</td>{% endif %}
+            <td class="n">{{ l.diff_txt }}</td>
+            <td>{{ l.status }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="2">Total</td>
+            <td class="n">{{ r.tot.sc_txt }}</td>
+            <td class="n">{{ r.tot.prod_txt }}</td>
+            {% if r.con_retenido %}<td class="n">{{ r.tot.ret_txt }}</td>{% endif %}
+            <td class="n">{{ r.tot.diff_txt }}</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    {% if r.resumen_pend %}<p class="resumen">{{ r.resumen_pend }}</p>{% endif %}
+
+    {% if r.avisos %}
+    <ul class="avisos sin-imprimir">
+      {% for a in r.avisos %}<li>{{ a }}</li>{% endfor %}
+    </ul>
+    {% endif %}
+
+    <div class="acciones-resultado sin-imprimir">
+      <button type="button" class="secundario" onclick="window.print()">Imprimir</button>
+    </div>
+  </section>
+  {% endif %}
+
+</main>
+</body>
+</html>

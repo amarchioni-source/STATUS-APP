@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+# Los Excel contienen datos comerciales: nunca se suben al repositorio
+*.xlsx
+*.xlsm
+*.xls
+data/

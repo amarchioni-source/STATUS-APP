@@ -1,0 +1,16 @@
+{
+  "ventas": {
+    "so": "Order Number",
+    "codigo": "Code",
+    "descripcion": "Description",
+    "kg": "Quantity",
+    "consignee": "Consignee"
+  },
+  "stock": {
+    "so": "PED. ORIG",
+    "codigo": "CODIGO",
+    "descripcion": "DESCRIPCION",
+    "kg": "kg",
+    "retenido": "Retenido"
+  }
+}
