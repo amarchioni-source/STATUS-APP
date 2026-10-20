@@ -47,7 +47,7 @@
       border-radius: 8px;
       padding: 20px;
     }
-    .campos { display: grid; grid-template-columns: 1fr 1fr 170px; gap: 18px; }
+    .campos { display: grid; grid-template-columns: 1fr 1fr 210px; gap: 18px; align-items: start; }
     .campo { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
     .rotulo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; }
     .paso {
@@ -55,6 +55,11 @@
       width: 22px; height: 22px; border-radius: 50%;
       background: var(--tinta); color: #fff; font-size: 12px; flex: none;
     }
+    .rotulo-sec { font-weight: 600; font-size: 13px; color: var(--suave); }
+    .o { font-size: 12px; color: var(--suave); display: flex; align-items: center; gap: 8px; }
+    .o::before, .o::after { content: ""; flex: 1; border-top: 1px solid var(--linea); }
+    #campo-pedidos { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+    #campo-pedidos[hidden] { display: none; }
     input[type="text"] {
       font: inherit; padding: 9px 10px; border: 1px solid #aeb8c1; border-radius: 5px; background: #fff; width: 100%;
     }
@@ -114,6 +119,7 @@
       background: var(--ok); color: #fff; font-size: 18px; line-height: 1;
     }
     .generado span:last-child { font-weight: 400; color: #2f6b45; }
+    .pedidos-sub { margin: -6px 0 12px; color: var(--suave); font-size: 13px; }
     .resultado h2 { font-size: 20px; margin: 30px 0 14px; letter-spacing: -0.01em; }
 
     .banner {
@@ -190,14 +196,21 @@
           <span class="rotulo"><span class="paso">1</span> Excel de stock</span>
           <input type="file" name="stock" accept=".xlsx,.xlsm" required>
         </label>
-        <label class="campo">
-          <span class="rotulo"><span class="paso">2</span> Excel de ventas</span>
-          <input type="file" name="ventas" accept=".xlsx,.xlsm" required>
-        </label>
-        <label class="campo">
-          <span class="rotulo"><span class="paso">3</span> Nro. de SO</span>
-          <input type="text" name="so" value="{{ so or '' }}" inputmode="numeric" placeholder="10121" required>
-        </label>
+        <div class="campo">
+          <label class="rotulo" for="f-ventas"><span class="paso">2</span> Excel de ventas</label>
+          <input type="file" id="f-ventas" name="ventas" accept=".xlsx,.xlsm">
+          <span class="o">o</span>
+          <label class="rotulo-sec" for="f-shipment">Excel de shipment</label>
+          <input type="file" id="f-shipment" name="shipment" accept=".xlsx,.xlsm">
+        </div>
+        <div class="campo">
+          <label class="rotulo" for="f-so"><span class="paso">3</span> Nro. de SO o shipment</label>
+          <input type="text" id="f-so" name="so" value="{{ so or '' }}" placeholder="10121 o 10121-1" required>
+          <div id="campo-pedidos" {{ '' if pedidos else 'hidden' }}>
+            <label class="rotulo-sec" for="f-pedidos">Pedidos del shipment</label>
+            <input type="text" id="f-pedidos" name="pedidos" value="{{ pedidos or '' }}" placeholder="218136, 218137">
+          </div>
+        </div>
       </div>
       <div class="acciones">
         <label class="check"><input type="checkbox" name="final" value="1" {{ 'checked' if final }}> Pedido cerrado (título FINAL)</label>
@@ -217,10 +230,11 @@
           <h3>Cómo usarla</h3>
           <ol>
             <li>Descargue el reporte de stock (<em>PD_INFORME STOCK POR VENTAS</em>) y el reporte de ventas (<em>Reporte de ventas</em>, de ImpexDocs), sin modificarlos.</li>
-            <li>Suba los dos archivos y escriba el número de SO, por ejemplo 10121.</li>
+            <li>Suba el stock y el de ventas, y escriba el número de SO, por ejemplo 10121.</li>
             <li>Toque <strong>Generar status</strong>. Con el stock completo puede tardar hasta un minuto.</li>
             <li>Para imprimir use el botón <strong>Imprimir</strong> que aparece debajo del resultado.</li>
           </ol>
+          <p class="nota"><strong>Venta con varios envíos (shipments):</strong> en el paso 2 suba el Excel de shipment en lugar del de ventas, escriba el número de shipment (por ejemplo 10221-1) y los pedidos que lo conforman (por ejemplo 218136, 218137), tal como figuran en la columna PEDIDO del stock.</p>
           <p class="nota">Los archivos se procesan en el momento y no se guardan.</p>
         </div>
         <div>
@@ -245,6 +259,8 @@
         <span>SO {{ r.so }} procesado correctamente</span>
       </div>
       <h2>{{ 'FINAL' if final else 'STATUS!' }} – SO {{ r.so }}{% if r.consignee %} ({{ r.consignee }}){% endif %}</h2>
+
+      {% if r.es_shipment and r.pedidos %}<p class="pedidos-sub sin-imprimir">Shipment · pedidos en stock: {{ r.pedidos | join(', ') }}</p>{% endif %}
 
       {% if r.hay_retenido %}
       <div class="banner alerta" role="alert">
@@ -320,6 +336,17 @@
       var form = document.getElementById('form-carga');
       var boton = document.getElementById('boton-generar');
       var aviso = document.getElementById('aviso-espera');
+      var fVentas = document.getElementById('f-ventas');
+      var fShip = document.getElementById('f-shipment');
+      var fSo = document.getElementById('f-so');
+      var cPedidos = document.getElementById('campo-pedidos');
+      function mostrarPedidos() {
+        var esShip = (fShip.files && fShip.files.length > 0) || fSo.value.indexOf('-') !== -1;
+        cPedidos.hidden = !esShip && !document.getElementById('f-pedidos').value;
+      }
+      fVentas.addEventListener('change', function () { if (fVentas.files.length) { fShip.value = ''; } mostrarPedidos(); });
+      fShip.addEventListener('change', function () { if (fShip.files.length) { fVentas.value = ''; } mostrarPedidos(); });
+      fSo.addEventListener('input', mostrarPedidos);
       form.addEventListener('submit', function () {
         boton.disabled = true;
         boton.textContent = 'Procesando…';
