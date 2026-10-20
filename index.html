@@ -55,11 +55,16 @@
       width: 22px; height: 22px; border-radius: 50%;
       background: var(--tinta); color: #fff; font-size: 12px; flex: none;
     }
+    .grupo { display: flex; flex-direction: column; gap: 8px; }
+    .grupo[hidden] { display: none; }
+    .modo { display: inline-flex; align-self: flex-start; border: 1px solid var(--acero); border-radius: 6px; overflow: hidden; }
+    .modo label { position: relative; padding: 7px 12px; font-size: 13px; font-weight: 600; color: var(--acero); cursor: pointer; }
+    .modo input { position: absolute; opacity: 0; pointer-events: none; }
+    .modo label:has(input:checked) { background: var(--acero); color: #fff; }
+    .modo label:has(input:focus-visible) { outline: 3px solid #7aa7d0; outline-offset: -3px; }
     .rotulo-sec { font-weight: 600; font-size: 13px; color: var(--suave); }
     .o { font-size: 12px; color: var(--suave); display: flex; align-items: center; gap: 8px; }
     .o::before, .o::after { content: ""; flex: 1; border-top: 1px solid var(--linea); }
-    #campo-pedidos { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
-    #campo-pedidos[hidden] { display: none; }
     input[type="text"] {
       font: inherit; padding: 9px 10px; border: 1px solid #aeb8c1; border-radius: 5px; background: #fff; width: 100%;
     }
@@ -196,19 +201,33 @@
           <span class="rotulo"><span class="paso">1</span> Excel de stock</span>
           <input type="file" name="stock" accept=".xlsx,.xlsm" required>
         </label>
+
         <div class="campo">
-          <label class="rotulo" for="f-ventas"><span class="paso">2</span> Excel de ventas</label>
-          <input type="file" id="f-ventas" name="ventas" accept=".xlsx,.xlsm">
-          <span class="o">o</span>
-          <label class="rotulo-sec" for="f-shipment">Excel de shipment</label>
-          <input type="file" id="f-shipment" name="shipment" accept=".xlsx,.xlsm">
+          <span class="rotulo"><span class="paso">2</span> Venta a controlar</span>
+          <div class="modo" role="radiogroup" aria-label="Tipo de venta">
+            <label><input type="radio" name="modo" value="so" {{ '' if modo == 'shipment' else 'checked' }}> Venta completa (SO)</label>
+            <label><input type="radio" name="modo" value="shipment" {{ 'checked' if modo == 'shipment' }}> Shipment</label>
+          </div>
+          <div class="grupo" id="g-ventas" {{ 'hidden' if modo == 'shipment' }}>
+            <label class="rotulo-sec" for="f-ventas">Excel de ventas</label>
+            <input type="file" id="f-ventas" name="ventas" accept=".xlsx,.xlsm" required {{ 'disabled' if modo == 'shipment' }}>
+          </div>
+          <div class="grupo" id="g-envio" {{ '' if modo == 'shipment' else 'hidden' }}>
+            <label class="rotulo-sec" for="f-envio">Excel de shipment</label>
+            <input type="file" id="f-envio" name="shipment" accept=".xlsx,.xlsm" required {{ '' if modo == 'shipment' else 'disabled' }}>
+          </div>
         </div>
+
         <div class="campo">
-          <label class="rotulo" for="f-so"><span class="paso">3</span> Nro. de SO o shipment</label>
-          <input type="text" id="f-so" name="so" value="{{ so or '' }}" placeholder="10121 o 10121-1" required>
-          <div id="campo-pedidos" {{ '' if pedidos else 'hidden' }}>
-            <label class="rotulo-sec" for="f-pedidos">Pedidos del shipment</label>
-            <input type="text" id="f-pedidos" name="pedidos" value="{{ pedidos or '' }}" placeholder="218136, 218137">
+          <div class="grupo" id="g-so" {{ 'hidden' if modo == 'shipment' }}>
+            <label class="rotulo" for="f-so"><span class="paso">3</span> Nro. de SO</label>
+            <input type="text" id="f-so" name="so" value="{{ '' if modo == 'shipment' else (so or '') }}" placeholder="10121" required {{ 'disabled' if modo == 'shipment' }}>
+          </div>
+          <div class="grupo" id="g-ship" {{ '' if modo == 'shipment' else 'hidden' }}>
+            <label class="rotulo" for="f-ship"><span class="paso">3</span> Nro. de shipment</label>
+            <input type="text" id="f-ship" name="so" value="{{ (so or '') if modo == 'shipment' else '' }}" placeholder="10122-1" required {{ '' if modo == 'shipment' else 'disabled' }}>
+            <label class="rotulo-sec" for="f-pedidos">Pedidos del shipment (en el stock)</label>
+            <input type="text" id="f-pedidos" name="pedidos" value="{{ pedidos or '' }}" placeholder="218136, 218137" required {{ '' if modo == 'shipment' else 'disabled' }}>
           </div>
         </div>
       </div>
@@ -230,11 +249,11 @@
           <h3>Cómo usarla</h3>
           <ol>
             <li>Descargue el reporte de stock (<em>PD_INFORME STOCK POR VENTAS</em>) y el reporte de ventas (<em>Reporte de ventas</em>, de ImpexDocs), sin modificarlos.</li>
-            <li>Suba el stock y el de ventas, y escriba el número de SO, por ejemplo 10121.</li>
+            <li>Suba el stock, elija «Venta completa (SO)», suba el Excel de ventas y escriba el número de SO, por ejemplo 10121.</li>
             <li>Toque <strong>Generar status</strong>. Con el stock completo puede tardar hasta un minuto.</li>
             <li>Para imprimir use el botón <strong>Imprimir</strong> que aparece debajo del resultado.</li>
           </ol>
-          <p class="nota"><strong>Venta con varios envíos (shipments):</strong> en el paso 2 suba el Excel de shipment en lugar del de ventas, escriba el número de shipment (por ejemplo 10221-1) y los pedidos que lo conforman (por ejemplo 218136, 218137), tal como figuran en la columna PEDIDO del stock.</p>
+          <p class="nota"><strong>Venta con varios envíos (shipments):</strong> elija «Shipment», suba el Excel de shipment (el <em>REPORTE DOC</em> de ImpexDocs), escriba el número de shipment (por ejemplo 10122-1) y los pedidos que lo conforman (por ejemplo 218136, 218137), tal como figuran en la columna PEDIDO del stock. Los productos y kilos salen del Excel de shipment y el volumen producido, de esos pedidos.</p>
           <p class="nota">Los archivos se procesan en el momento y no se guardan.</p>
         </div>
         <div>
@@ -336,17 +355,22 @@
       var form = document.getElementById('form-carga');
       var boton = document.getElementById('boton-generar');
       var aviso = document.getElementById('aviso-espera');
-      var fVentas = document.getElementById('f-ventas');
-      var fShip = document.getElementById('f-shipment');
-      var fSo = document.getElementById('f-so');
-      var cPedidos = document.getElementById('campo-pedidos');
-      function mostrarPedidos() {
-        var esShip = (fShip.files && fShip.files.length > 0) || fSo.value.indexOf('-') !== -1;
-        cPedidos.hidden = !esShip && !document.getElementById('f-pedidos').value;
+      function grupo(id, visible) {
+        var g = document.getElementById(id);
+        g.hidden = !visible;
+        g.querySelectorAll('input').forEach(function (i) { i.disabled = !visible; });
       }
-      fVentas.addEventListener('change', function () { if (fVentas.files.length) { fShip.value = ''; } mostrarPedidos(); });
-      fShip.addEventListener('change', function () { if (fShip.files.length) { fVentas.value = ''; } mostrarPedidos(); });
-      fSo.addEventListener('input', mostrarPedidos);
+      function aplicarModo() {
+        var envio = document.querySelector('input[name="modo"]:checked').value === 'shipment';
+        grupo('g-ventas', !envio);
+        grupo('g-so', !envio);
+        grupo('g-envio', envio);
+        grupo('g-ship', envio);
+      }
+      document.querySelectorAll('input[name="modo"]').forEach(function (r) {
+        r.addEventListener('change', aplicarModo);
+      });
+      aplicarModo();
       form.addEventListener('submit', function () {
         boton.disabled = true;
         boton.textContent = 'Procesando…';
