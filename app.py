@@ -52,16 +52,24 @@ def status():
     pedidos = (request.form.get("pedidos") or "").strip()
     final = bool(request.form.get("final"))
 
-    def volver(mensaje, codigo=400):
-        return render_template("index.html", error=mensaje, so=so, pedidos=pedidos, final=final), codigo
-
     def cargado(f):
         return bool(f and f.filename)
 
+    modo = request.form.get("modo") or ("shipment" if cargado(f_ship) else "so")
+
+    def volver(mensaje, codigo=400):
+        return render_template("index.html", error=mensaje, so=so, pedidos=pedidos, final=final, modo=modo), codigo
+
     if not cargado(f_stock):
         return volver("Suba el Excel de stock.")
-    if not cargado(f_ventas) and not cargado(f_ship):
-        return volver("Suba el Excel de ventas o el Excel de shipment.")
+    if modo == "shipment":
+        if not cargado(f_ship):
+            return volver("Suba el Excel de shipment.")
+        f_ventas = None
+    else:
+        if not cargado(f_ventas):
+            return volver("Suba el Excel de ventas.")
+        f_ship = None
     for f in (f_stock, f_ventas, f_ship):
         if cargado(f) and not f.filename.lower().endswith(EXTENSIONES):
             return volver(f"El archivo «{f.filename}» no es .xlsx. Guárdelo como Libro de Excel (.xlsx) y vuelva a subirlo.")
@@ -77,7 +85,7 @@ def status():
         app.logger.exception("Error procesando %s", so)
         return volver("No se pudo procesar alguno de los archivos. Revise que sean los reportes originales sin modificar.", 500)
 
-    return render_template("index.html", r=resultado, so=so, pedidos=pedidos, final=final)
+    return render_template("index.html", r=resultado, so=so, pedidos=pedidos, final=final, modo=modo)
 
 
 @app.errorhandler(413)
@@ -97,6 +105,7 @@ def error_inesperado(exc):
             so=request.form.get("so", ""),
             pedidos=request.form.get("pedidos", ""),
             final=bool(request.form.get("final")),
+            modo=request.form.get("modo", "so"),
         ),
         500,
     )
