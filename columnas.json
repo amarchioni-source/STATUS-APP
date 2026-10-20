@@ -16,29 +16,28 @@
   },
   "shipment": {
     "so": [
+      "Shipment No",
       "Nro. Confir.",
       "Order Number"
     ],
-    "pedidos": [
-      "P. Twins"
-    ],
     "codigo": [
-      "Cod.",
-      "Code"
+      "Code",
+      "Cod."
     ],
     "nivel3": [
       "Cod Nvl 3.",
       "Cod Nvl 3"
     ],
     "descripcion": [
-      "Desc.",
-      "Description"
+      "Description",
+      "Desc."
     ],
     "kg": [
-      "Cant.",
-      "Quantity"
+      "Quantity",
+      "Cant."
     ],
     "consignee": [
+      "Consignee Name",
       "Desc. Cli.",
       "Consignee"
     ]
